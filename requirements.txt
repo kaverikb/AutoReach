@@ -1,0 +1,24 @@
+# HTTP requests & API handling
+requests
+python-dotenv
+
+# LangGraph / LangChain (for workflow orchestration)
+langgraph
+langchain
+
+# LLM integration
+openai
+
+# Google Sheets API
+gspread
+oauth2client
+
+# Streamlit for UI
+streamlit
+
+# Optional helpers
+pandas
+numpy
+
+#storage
+chromadb

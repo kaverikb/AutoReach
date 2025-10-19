@@ -1,0 +1,104 @@
+{
+  "workflow_name": "AutoReachOutboundLeadGen",
+  "description": "End-to-end LangGraph workflow to discover, enrich, score, contact, and track B2B leads",
+  "config": {
+    "scoring": {
+      "employee_count": 0.3,
+      "revenue": 0.4,
+      "role_match": 0.3
+    }
+  },
+  "steps": [
+    {
+      "id": "prospect_search",
+      "agent": "ProspectSearchAgent",
+      "inputs": {
+        "icp": {
+          "industry": "SaaS",
+          "location": "United States",
+          "employee_count": { "min": 100, "max": 1000 },
+          "revenue": { "min": 20000000, "max": 200000000 }
+        },
+        "signals": ["recent_funding", "hiring_for_sales"]
+      },
+      "instructions": "Use Apollo API to search for contacts matching ICP. Return structured leads.",
+      "tools": [
+        { "name": "ApolloAPI", "config": { "api_key": "{{APOLLO_API_KEY}}" } }
+      ],
+      "output_schema": {
+        "leads": [
+          { "company": "string", "contact_name": "string", "email": "string", "linkedin": "string", "signal": "string" }
+        ]
+      }
+    },
+    {
+      "id": "enrichment",
+      "agent": "DataEnrichmentAgent",
+      "inputs": { "leads": "{{prospect_search.output.leads}}" },
+      "instructions": "Enrich lead data using Hunter.io API.",
+      "tools": [
+        { "name": "HunterIO", "config": { "api_key": "{{HUNTER_API_KEY}}" } }
+      ],
+      "output_schema": {
+        "enriched_leads": [
+          { "company": "string", "contact": "string", "role": "string", "technologies": "array" }
+        ]
+      }
+    },
+    {
+      "id": "scoring",
+      "agent": "ScoringAgent",
+      "inputs": {
+        "enriched_leads": "{{enrichment.output.enriched_leads}}",
+        "scoring_criteria": "{{config.scoring}}"
+      },
+      "instructions": "Score leads based on configurable ICP scoring function.",
+      "tools": [],
+      "output_schema": { "ranked_leads": "array" }
+    },
+    {
+      "id": "outreach_content",
+      "agent": "OutreachContentAgent",
+      "inputs": {
+        "ranked_leads": "{{scoring.output.ranked_leads}}",
+        "persona": "SDR",
+        "tone": "friendly"
+      },
+      "instructions": "Generate personalized outreach messages using DeepSeek API and lead context.",
+      "tools": [
+        { "name": "DeepSeek", "config": { "api_key": "{{DEEPSEEK_API_KEY}}" } }
+      ],
+      "output_schema": {
+        "messages": [{ "lead": "string", "email": "string", "subject": "string", "email_body": "string" }]
+      }
+    },
+    {
+      "id": "send",
+      "agent": "OutreachExecutorAgent",
+      "inputs": { "messages": "{{outreach_content.output.messages}}" },
+      "instructions": "Send emails using Brevo API and log delivery.",
+      "tools": [
+        { "name": "BrevoAPI", "config": { "api_key": "{{BREVO_API_KEY}}" } }
+      ],
+      "output_schema": { "sent_status": "array", "campaign_id": "string" }
+    },
+    {
+      "id": "response_tracking",
+      "agent": "ResponseTrackerAgent",
+      "inputs": { "campaign_id": "{{send.output.campaign_id}}" },
+      "instructions": "Monitor email responses and engagement.",
+      "tools": [],
+      "output_schema": { "responses": "array" }
+    },
+    {
+      "id": "feedback_trainer",
+      "agent": "FeedbackTrainerAgent",
+      "inputs": { "responses": "{{response_tracking.output.responses}}" },
+      "instructions": "Analyze engagement data and suggest workflow improvements.",
+      "tools": [
+        { "name": "GoogleSheets", "config": { "sheet_id": "{{SHEET_ID}}" } }
+      ],
+      "output_schema": { "recommendations": "array", "analytics": "object" }
+    }
+  ]
+}
