@@ -25,7 +25,7 @@ AutoReach streamlines the B2B outreach process by combining multiple APIs and in
 | Purpose            | API / Service             | Endpoint Example           |
 | ------------------ | ------------------------- | -------------------------- |
 | Prospect Discovery | Apollo API                | `/v1/contacts/search`      |
-| Lead Enrichment    | Hunter.io                 | `/v2/domain-search`        |
+| Lead Enrichment    | Hunter API                 | `/v2/domain-search`        |
 | Email Generation   | DeepSeek (via OpenRouter) | `/api/v1/chat/completions` |
 | Email Delivery     | Brevo API                 | `/v3/smtp/email`           |
 | Feedback & Metrics | Google Sheets API         | Logged via `gspread`       |
